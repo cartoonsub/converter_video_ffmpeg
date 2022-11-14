@@ -124,9 +124,8 @@ class Converter:
 
             audio = self.setAudio(file)
             if not audio:
-                print('Не удалось получить аудио дорожку' + name)
+                print('Не удалось получить аудио дорожку для ' + name)
                 continue
-                # audio = ' -map 0:' + str(mapAudio) + ' -c:a:' + str(mapAudio) + ' ' + audioTrack['codecAudio'] + ' -b:a ' + bitrate
 
             query = self.setQueryPass1(file, query)
             queries.append(query)
@@ -145,6 +144,35 @@ class Converter:
         
         return queries
 
+    def prepareName(self, name):
+        name = name.replace(' ', '')
+        name = name.replace('\"\'', '')
+        return name
+
+    def setAudio(self, file) -> dict:
+        audio = {}
+        for audioTrack in file['info']['audioTracks'].values():
+            language = ''
+            if 'language' in audioTrack:
+                language = audioTrack['language']
+
+            # if language == 'eng':
+            #     continue
+            # if language == 'Original':
+            #     continue
+
+            mapAudio = audioTrack['mapAudio']
+            if 'bitrate' in audioTrack:
+                audio['bitrate'] = str(audioTrack['bitrate'])
+            else:
+                audio['bitrate'] = self.bitrateAudio
+            audio['map'] = str(mapAudio)
+
+            if language == 'rus':
+                break
+        
+        return audio
+
     def setQueryPass1(self, file, query) -> str:
         if file['info']['codecVideo']:
             codec = file['info']['codecVideo']
@@ -155,30 +183,6 @@ class Converter:
         query = query + ' -c:v ' + codec + ' -b:v ' + self.bitrateVideo + ' -pass 1 -an -f mp4 ' + self.outFolder + 'NULL' # NULL
 
         return query
-
-    def setAudio(self, file) -> dict:
-        audio = {}
-        for audioTrack in file['info']['audioTracks'].values():
-            language = ''
-            if 'language' in audioTrack:
-                language = audioTrack['language']
-
-            # if audioTrack['language'] == 'eng':
-            #     continue
-            # if audioTrack['language'] == 'Original':
-            #     continue
-            mapAudio = audioTrack['mapAudio']
-            if 'bitrate' in audioTrack:
-                audio['bitrate'] = str(audioTrack['bitrate'])
-            else:
-                audio['bitrate'] = self.bitrateAudio
-            audio['map'] = str(mapAudio)
-            # if audioTrack['language'] == 'Yet Another Studio':
-            #     break
-            if language == 'rus':
-                break
-        
-        return audio
 
     def convert_video(self, queries):
         for query in queries:
@@ -198,23 +202,6 @@ class Converter:
                 return True
             answer = self.has_key(keys[1:], dict[keys[0]])
         return answer
-
-    def prepareName(self, name):
-        name = name.replace(' ', '')
-        name = name.replace('\"\'', '')
-        # name = re.sub(r'su\.s(\d+)e(\d+)e(\d+)',
-        #               r"S\1E\2E\3.DUB", name, flags=re.IGNORECASE)
-
-
-        print(name)
-        # print(matches.groups())
-        matches = re.search(r'(\d+)[x-]+(\d+).+?\[([\w\s.-]+)\]+', name, flags=re.IGNORECASE)
-        if not matches:
-            print('Не удалось получить название серии: ' + name)
-            return name
-        # name = 'S' + matches.group[1] + 'E' + matches[2] + 'DUB' + 'x1080x' + matches[3]
-        return name
-        # .zfill(2)
 
     def prepare_query_get_audio(self, file, name) -> str:
         query = ''
@@ -244,8 +231,8 @@ class Converter:
             
         return query
 
-folder = 'D:\\cartoon\\gumball\\4season\\input\\'
-outFolder = 'D:\\cartoon\\gumball\\4season\\output\\'
+folder = 'D:\\cartoon\\gumball\\5season\\input\\'
+outFolder = 'D:\\cartoon\\gumball\\5season\\output\\'
 Converter = Converter(folder=folder, outFolder=outFolder, convert=True)
 Converter.run()
 
