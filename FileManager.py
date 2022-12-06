@@ -2,15 +2,49 @@ import re
 import os
 import shutil
 from time import sleep
-import series_finder
+import seriesFinder
 
 class FileManager():
     def __init__(self, folder, dest):
          self.folder = folder
          self.dest = dest
          self.names = []
-         self.walkFiles(folder)
     
+    def renameFilesBySeries(self):
+        files = self.getFiles(self.folder)
+        print(files)
+        seriesList = seriesFinder.getSeriesList('https://cartoonsub.com/serials/amazingworldofgumball/S03')
+        if not seriesList:
+            print('Error: seriesList is empty')
+            return
+        
+        for file in files:
+            currentNameFile = os.path.basename(file)
+            currentNameFile = currentNameFile.lower()
+            
+            for serie in seriesList:
+                nameSerie = serie['name'].lower()
+                if currentNameFile.find(nameSerie) == -1:
+                    continue
+
+                numberSerie = str(serie['number']).zfill(2)
+                newName = re.sub(r'S02E(\d+)', 'S02E' + numberSerie, file)
+                print('Renamed:', file, 'to', newName)
+                # shutil.move(file, newName)
+                break
+
+    def getFiles(self, folder) -> list:
+        filesList = []
+        os.chdir(folder)
+        curentDir = os.getcwd()
+        for root, dirs, files in os.walk(curentDir):
+            if not files:
+                continue
+            for file in files:
+                currentFile = os.path.join(root, file)
+                filesList.append(currentFile)
+        return filesList
+
     def walkFiles(self, folder):
         os.chdir(folder)
         curentDir = os.getcwd()
@@ -102,3 +136,9 @@ class FileManager():
     def moveFile(self, file, dest):
         shutil.move(file, dest)
         print('Moved:', file)
+
+if __name__ == '__main__':
+    folder = r'C:\phytonProjects\testfolder'
+    dest = r'C:\phytonProjects\testfolder'
+    Fm = FileManager(folder, dest)
+    Fm.renameFilesBySeries()
