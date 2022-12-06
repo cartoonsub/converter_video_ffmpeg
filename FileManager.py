@@ -1,6 +1,7 @@
 import re
 import os
 import shutil
+from pprint import pprint
 from time import sleep
 import seriesFinder
 
@@ -12,7 +13,6 @@ class FileManager():
     
     def renameFilesBySeries(self):
         files = self.getFiles(self.folder)
-        print(files)
         seriesList = seriesFinder.getSeriesList('https://cartoonsub.com/serials/amazingworldofgumball/S03')
         if not seriesList:
             print('Error: seriesList is empty')
@@ -23,12 +23,12 @@ class FileManager():
             currentNameFile = currentNameFile.lower()
             
             for serie in seriesList:
-                nameSerie = serie['name'].lower()
+                nameSerie = serie['name'].lower().replace(' ', '')
                 if currentNameFile.find(nameSerie) == -1:
                     continue
 
                 numberSerie = str(serie['number']).zfill(2)
-                newName = re.sub(r'S02E(\d+)', 'S02E' + numberSerie, file)
+                newName = re.sub(r'S03E(\d+)', 'S02E' + numberSerie, file)
                 print('Renamed:', file, 'to', newName)
                 # shutil.move(file, newName)
                 break
@@ -138,7 +138,7 @@ class FileManager():
         print('Moved:', file)
 
 if __name__ == '__main__':
-    folder = r'C:\phytonProjects\testfolder'
-    dest = r'C:\phytonProjects\testfolder'
+    folder = r'D:\cartoon\gumball\3season'
+    dest = r'D:\cartoon\gumball\3season'
     Fm = FileManager(folder, dest)
     Fm.renameFilesBySeries()

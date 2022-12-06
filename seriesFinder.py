@@ -16,8 +16,7 @@ def getSeriesList(url) -> list:
 
     Soup = BeautifulSoup(html, 'html.parser')
     for item in Soup.select('.article_name h2'):
-        name = item.text.lower()
-        matches = re.search(r'(\d+)\s+серия\s+(.+)', name, re.IGNORECASE)
+        matches = re.search(r'(\d+)\s+серия\s+(.+)', item.text, re.IGNORECASE)
         if not matches:
             continue
         data = {
