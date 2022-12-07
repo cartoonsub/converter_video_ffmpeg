@@ -4,13 +4,44 @@ import shutil
 from pprint import pprint
 from time import sleep
 import seriesFinder
+import argparse
+import sys
 
 class FileManager():
-    def __init__(self, folder, dest):
-         self.folder = folder
-         self.dest = dest
+    def __init__(self):
          self.names = []
-    
+         self.folder = ''
+         self.dest = ''
+         self.url = ''
+
+         arguments = self.getArgumets()
+         if not arguments:
+            exit('did not find arguments')
+         print(arguments)
+
+    def getArgumets(self):
+        commands = ['folder', 'dest', 'url'] #сделать уникальным список todo
+        arguments = {}
+        args = sys.argv
+        if not args:
+            return
+
+        for i in range(len(args)):
+            if i == 0:
+                continue
+            item = args[i].split('=')
+            if len(item) < 2:
+                continue
+            if item[0] not in commands:
+                continue
+            
+            arguments[item[0]] = item[1]
+        
+        pprint(arguments)
+        if len(arguments) != len(commands):
+            return {}
+        return arguments
+
     def renameFilesBySeries(self):
         files = self.getFiles(self.folder)
         seriesList = seriesFinder.getSeriesList('https://cartoonsub.com/serials/amazingworldofgumball/S03')
@@ -32,6 +63,7 @@ class FileManager():
                 print('Renamed:', file, 'to', newName)
                 # shutil.move(file, newName)
                 break
+
 
     def getFiles(self, folder) -> list:
         filesList = []
@@ -64,9 +96,8 @@ class FileManager():
         print('Renamed:', file, 'to', newFile)
         shutil.move(file, newFile)
 
-
 if __name__ == '__main__':
     folder = r'D:\cartoon\gumball\3season'
     dest = r'D:\cartoon\gumball\3season'
-    Fm = FileManager(folder, dest)
-    Fm.renameFilesBySeries()
+    Fm = FileManager()
+    # Fm.renameFilesBySeries()
