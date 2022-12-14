@@ -1,11 +1,9 @@
 import re
 import os
-import shutil
-from pprint import pprint
-from time import sleep
-import seriesFinder
-import argparse
 import sys
+import shutil
+import seriesFinder
+# from pprint import pprint
 
 class FileManager():
     def __init__(self):
@@ -13,13 +11,27 @@ class FileManager():
          self.folder = ''
          self.dest = ''
          self.url = ''
+         self.setArguments()
 
-         arguments = self.getArgumets()
-         if not arguments:
+    # todo пересмотреть создание переменных из списка ?
+    def setArguments(self):
+        arguments = self.getArgumetsList()
+        if not arguments:
             exit('did not find arguments')
-         print(arguments)
 
-    def getArgumets(self):
+        if 'folder' in arguments:
+            self.folder = arguments['folder']
+            self.RenameFiles()
+         
+        if 'dest' in arguments:
+            self.dest = arguments['dest']
+
+        if 'url' in arguments:
+            self.url = arguments['url']
+            self.renameFilesBySeries()
+
+
+    def getArgumetsList(self):
         commands = ['folder', 'dest', 'url'] #сделать уникальным список todo
         arguments = {}
         args = sys.argv
@@ -37,14 +49,15 @@ class FileManager():
             
             arguments[item[0]] = item[1]
         
-        pprint(arguments)
-        if len(arguments) != len(commands):
-            return {}
         return arguments
 
+
     def renameFilesBySeries(self):
+        if not self.folder:
+            return
+        
         files = self.getFiles(self.folder)
-        seriesList = seriesFinder.getSeriesList('https://cartoonsub.com/serials/amazingworldofgumball/S03')
+        seriesList = seriesFinder.getSeriesList(self.url)
         if not seriesList:
             print('Error: seriesList is empty')
             return
@@ -61,7 +74,7 @@ class FileManager():
                 numberSerie = str(serie['number']).zfill(2)
                 newName = re.sub(r'S03E(\d+)', 'S02E' + numberSerie, file)
                 print('Renamed:', file, 'to', newName)
-                # shutil.move(file, newName)
+                shutil.move(file, newName)
                 break
 
 
@@ -77,8 +90,12 @@ class FileManager():
                 filesList.append(currentFile)
         return filesList
 
+    def RenameFiles(self):
+        files = self.getFiles(self.folder)
+        for file in files:
+            self.Rename(file)
 
-    def Rename(self, file, root):
+    def Rename(self, file):
         matches = re.search(r'x(\d{1,2})-(\d{1,2}).+?\[(\w+)].+?(\.\w+)$', file, re.IGNORECASE)
         matches = re.search(r'S02E(\d+)-(\d+)\[(\w+)\].+?(\.\w+)$', file, re.IGNORECASE)
         matches = re.search(r'(\d)x(\d+)-(\d+)TheAmazingWorldofGumball\[(\w+)\].+?(\.\w+)$', file, re.IGNORECASE)
@@ -97,7 +114,6 @@ class FileManager():
         shutil.move(file, newFile)
 
 if __name__ == '__main__':
-    folder = r'D:\cartoon\gumball\3season'
-    dest = r'D:\cartoon\gumball\3season'
+    # folder = r'D:\cartoon\gumball\3season'
+    # dest = r'D:\cartoon\gumball\3season'
     Fm = FileManager()
-    # Fm.renameFilesBySeries()
