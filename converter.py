@@ -1,17 +1,57 @@
 import os
 import re
+import sys
 import ffmpeg # https://github.com/kkroening/ffmpeg-python (pip install ffmpeg-python)
-from pprint import pprint
-from time import sleep
+# from pprint import pprint
 
 class Converter:
-    def __init__(self, folder=os.getcwd(), outFolder=os.getcwd(), convert=False):
+    def __init__(self):
         self.ffmpeg = 'C:/ffmpeg/bin/ffmpeg.exe'
-        self.folder = folder
-        self.outFolder = outFolder
+        self.folder = ''
+        self.outFolder = ''
         self.bitrateVideo = '5000k'
         self.bitrateAudio = '192k'
-        self.convert = convert
+        self.convert = False
+
+        arguments = self.getArgumetsList()
+        if not arguments:
+            exit('did not find arguments')
+        
+        if 'folder' in arguments:
+            self.folder = arguments['folder']
+         
+        if 'out_folder' in arguments:
+            self.outFolder = arguments['out_folder']
+
+        if 'convert' in arguments:
+            self.convert = bool(arguments['convert'])
+        
+        if not self.folder:
+            exit('did not find folder')
+        if not self.outFolder:
+            exit('did not find out_folder')
+
+        self.run()
+
+    def getArgumetsList(self):
+        commands = ['folder', 'out_folder', 'convert'] #сделать уникальным список todo
+        arguments = {}
+        args = sys.argv
+        if not args:
+            return
+
+        for i in range(len(args)):
+            if i == 0:
+                continue
+            item = args[i].split('=')
+            if len(item) < 2:
+                continue
+            if item[0] not in commands:
+                continue
+            
+            arguments[item[0]] = item[1]
+        
+        return arguments
 
     def run(self):
         files = self.prepare_video()
@@ -231,10 +271,9 @@ class Converter:
             
         return query
 
-folder = 'D:\\cartoon\\gumball\\5season\\input\\'
-outFolder = 'D:\\cartoon\\gumball\\5season\\output\\'
-Converter = Converter(folder=folder, outFolder=outFolder, convert=True)
-Converter.run()
+# folder = 'D:\\cartoon\\gumball\\5season\\input\\'
+# outFolder = 'D:\\cartoon\\gumball\\5season\\output\\'
+Converter = Converter()
 
 if __name__ == '__main__':
     pass
