@@ -72,7 +72,7 @@ class FileManager():
                     continue
 
                 numberSerie = str(serie['number']).zfill(2)
-                newName = re.sub(r'S03E(\d+)', 'S02E' + numberSerie, file)
+                newName = re.sub(r'S(\d{1,2})E(\d+)', r'S\1E' + numberSerie, file)
                 print('Renamed:', file, 'to', newName)
                 shutil.move(file, newName)
                 break
