@@ -25,7 +25,7 @@ def getSeriesList(url) -> list:
         data = {
             'fullName': matches[2],
             'name': split[0].strip(),
-            'secondName': split[1].strip() if len(split) > 1 else '',
+            'secondName': split[1].strip() if len(split) > 1 else 'notfound_wabalabadabda',
             'number': matches[1],
         }
 

@@ -102,7 +102,7 @@ class FileManager():
             if currentNameFile.find(name) != -1:
                 numberSerie = number
                 break
-        
+
         return numberSerie
 
     def getFiles(self, folder) -> list:
