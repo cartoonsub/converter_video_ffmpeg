@@ -19,6 +19,7 @@ def getSeriesList(url) -> list:
     for item in Soup.select('.article_name h2'):
         matches = re.search(r'(\d+)\s+серия\s+(.+)', item.text, re.IGNORECASE)
         if not matches:
+            print('Error: matches is empty for item:', item.text)
             continue
 
         split = re.split(r"\||/", matches[2])
