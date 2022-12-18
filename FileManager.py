@@ -72,22 +72,38 @@ class FileManager():
         for file in files:
             currentNameFile = os.path.basename(file)
             currentNameFile = currentNameFile.lower()
-            
-            for serie in seriesList:
-                nameSerie = serie['name'].lower().replace(' ', '')
-                if currentNameFile.find(nameSerie) == -1:
-                    print('Not found:', nameSerie, 'in', currentNameFile)
-                    sleep(1)
-                    continue
+            numberSerie = self.getNumberSerie(seriesList, currentNameFile)
+            if not numberSerie:
+                print('не найден номер серии для файла:', file)
+                continue
 
-                numberSerie = str(serie['number']).zfill(2)
-                newName = re.sub(r'S(\d{1,2})E(\d+)', r'S\1E' + numberSerie, file)
-                print('Renamed:', file, 'to', newName)
-                if self.test == True:
-                    break
+            newName = re.sub(r'S(\d{1,2})E(\d+)', r'S\1E' + numberSerie, file)
+            print('Renamed:', file, 'to', newName)
+            if self.test == False:
                 shutil.move(file, newName)
+
+
+    def getNumberSerie(self, seriesList, currentNameFile):
+        # todo rewrite, if there will be more variants of names
+        numberSerie = ''
+        for serie in seriesList:
+            number = str(serie['number']).zfill(2)
+            name = serie['name'].lower().replace(' ', '')
+            if currentNameFile.find(name) != -1:
+                numberSerie = number
                 break
 
+            name = serie['secondName'].lower().replace(' ', '')
+            if currentNameFile.find(name) != -1:
+                numberSerie = number
+                break
+
+            name = serie['fullName'].lower().replace(' ', '')
+            if currentNameFile.find(name) != -1:
+                numberSerie = number
+                break
+        
+        return numberSerie
 
     def getFiles(self, folder) -> list:
         filesList = []
