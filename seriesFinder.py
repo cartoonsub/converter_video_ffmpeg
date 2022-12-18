@@ -23,6 +23,7 @@ def getSeriesList(url) -> list:
             'name': matches[2],
             'number': matches[1],
         }
+
         seriesList.append(data)
 
     return seriesList

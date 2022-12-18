@@ -3,7 +3,8 @@ import os
 import sys
 import shutil
 import seriesFinder
-# from pprint import pprint
+from time import sleep
+from pprint import pprint
 
 class FileManager():
     def __init__(self):
@@ -11,6 +12,7 @@ class FileManager():
          self.folder = ''
          self.dest = ''
          self.url = ''
+         self.test = False
          self.setArguments()
 
     # todo пересмотреть создание переменных из списка ?
@@ -30,9 +32,12 @@ class FileManager():
             self.url = arguments['url']
             self.renameFilesBySeries()
 
+        if 'test' in arguments:
+            self.test = bool(arguments['test'])
+
 
     def getArgumetsList(self):
-        commands = ['folder', 'dest', 'url'] #сделать уникальным список todo
+        commands = set(['folder', 'dest', 'url', 'test'])
         arguments = {}
         args = sys.argv
         if not args:
@@ -62,6 +67,8 @@ class FileManager():
             print('Error: seriesList is empty')
             return
         
+        pprint(seriesList)
+
         for file in files:
             currentNameFile = os.path.basename(file)
             currentNameFile = currentNameFile.lower()
@@ -69,11 +76,15 @@ class FileManager():
             for serie in seriesList:
                 nameSerie = serie['name'].lower().replace(' ', '')
                 if currentNameFile.find(nameSerie) == -1:
+                    print('Not found:', nameSerie, 'in', currentNameFile)
+                    sleep(1)
                     continue
 
                 numberSerie = str(serie['number']).zfill(2)
                 newName = re.sub(r'S(\d{1,2})E(\d+)', r'S\1E' + numberSerie, file)
                 print('Renamed:', file, 'to', newName)
+                if self.test == True:
+                    break
                 shutil.move(file, newName)
                 break
 
@@ -99,18 +110,22 @@ class FileManager():
         matches = re.search(r'x(\d{1,2})-(\d{1,2}).+?\[(\w+)].+?(\.\w+)$', file, re.IGNORECASE)
         matches = re.search(r'S02E(\d+)-(\d+)\[(\w+)\].+?(\.\w+)$', file, re.IGNORECASE)
         matches = re.search(r'(\d)x(\d+)-(\d+)TheAmazingWorldofGumball\[(\w+)\].+?(\.\w+)$', file, re.IGNORECASE)
+        matches = re.search(r'(?P<season>\d)[x-]+(?P<serie>\d+)[-\s]*TheAmazingWorldofGumball[+\s]*\[(?P<name>[\w.]+)\].+?(?P<end>\.\w+)$', file, re.IGNORECASE)
         if not matches:
+            print('Not found:', file, end='\n\r \n\r')
             return
 
         type = 'DUB'
-        if matches[5] == '.aac':
+        if matches['end'] == '.aac':
             type = 'ORIGINAL'
-        newName = 'S0' + matches[1] + 'E' + matches[2] + 'DUBx1080x' + matches[4] + matches[5]
+        newName = 'S0' + matches['season'] + 'E' + matches['serie'] + type + 'x1080x' + matches['name'] + matches['end']
         if matches[2] in self.names:
-            newName = 'S0' + matches[1] + 'E' + matches[3] + type + 'x1080x' + matches[4] + matches[5]
-        newFile = os.path.join(root, newName)
-        self.names.append(matches[2])
-        print('Renamed:', file, 'to', newFile)
+            newName = 'S0' + matches['season'] + 'E' + matches['serie'] + type + 'x1080x' + matches['name'] + matches['end']
+        newFile = os.path.join(self.folder, newName)
+        self.names.append(matches['serie'])
+        print('Renamed:', file, 'to', newFile, end='\n\r \n\r')
+        if self.test == True:
+            return
         shutil.move(file, newFile)
 
 if __name__ == '__main__':
