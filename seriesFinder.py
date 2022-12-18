@@ -1,5 +1,6 @@
 import re
 import requests
+from pprint import pprint
 from bs4 import BeautifulSoup
 
 def getSeriesList(url) -> list:
@@ -19,8 +20,12 @@ def getSeriesList(url) -> list:
         matches = re.search(r'(\d+)\s+серия\s+(.+)', item.text, re.IGNORECASE)
         if not matches:
             continue
+
+        split = re.split(r"\||/", matches[2])
         data = {
-            'name': matches[2],
+            'fullName': matches[2],
+            'name': split[0].strip(),
+            'secondName': split[1].strip() if len(split) > 1 else '',
             'number': matches[1],
         }
 
