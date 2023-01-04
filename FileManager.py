@@ -21,6 +21,9 @@ class FileManager():
         if not arguments:
             exit('did not find arguments')
 
+        if 'test' in arguments:
+            self.test = bool(arguments['test'])
+
         if 'folder' in arguments:
             self.folder = arguments['folder']
             self.RenameFiles()
@@ -31,10 +34,6 @@ class FileManager():
         if 'url' in arguments:
             self.url = arguments['url']
             self.renameFilesBySeries()
-
-        if 'test' in arguments:
-            self.test = bool(arguments['test'])
-
 
     def getArgumetsList(self):
         commands = set(['folder', 'dest', 'url', 'test'])
@@ -123,9 +122,6 @@ class FileManager():
             self.Rename(file)
 
     def Rename(self, file):
-        matches = re.search(r'x(\d{1,2})-(\d{1,2}).+?\[(\w+)].+?(\.\w+)$', file, re.IGNORECASE)
-        matches = re.search(r'S02E(\d+)-(\d+)\[(\w+)\].+?(\.\w+)$', file, re.IGNORECASE)
-        matches = re.search(r'(\d)x(\d+)-(\d+)TheAmazingWorldofGumball\[(\w+)\].+?(\.\w+)$', file, re.IGNORECASE)
         matches = re.search(r'(?P<season>\d)[x-]+(?P<serie>\d+)[-\s]*TheAmazingWorldofGumball[+\s]*\[(?P<name>[\w.]+)\].+?(?P<end>\.\w+)$', file, re.IGNORECASE)
         if not matches:
             print('Not found:', file, end='\n\r \n\r')
@@ -143,6 +139,7 @@ class FileManager():
         if self.test == True:
             return
         shutil.move(file, newFile)
+
 
 if __name__ == '__main__':
     # folder = r'D:\cartoon\gumball\3season'
