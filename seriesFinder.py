@@ -17,7 +17,7 @@ def getSeriesList(url) -> list:
 
     Soup = BeautifulSoup(html, 'html.parser')
     for item in Soup.select('.article_name h2'):
-        matches = re.search(r'(\d+)\s+серия\s+(.+)', item.text, re.IGNORECASE)
+        matches = re.search(r'(\d+)\s+серия\s+(?:\d+\s+сезона*)(.+)', item.text, re.IGNORECASE)
         if not matches:
             print('Error: matches is empty for item:', item.text)
             continue
