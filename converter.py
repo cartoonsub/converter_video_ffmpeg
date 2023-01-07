@@ -2,7 +2,7 @@ import os
 import re
 import sys
 import ffmpeg # https://github.com/kkroening/ffmpeg-python (pip install ffmpeg-python)
-# from pprint import pprint
+from pprint import pprint
 
 class Converter:
     def __init__(self):
@@ -58,6 +58,8 @@ class Converter:
         if not files:
             print('Не найдены файлы для конвертации')
             return
+
+        pprint(files)
         queries = self.prepare_query(files)
         if not queries:
             print('Не удалось создать запросы для ffmpeg')
@@ -97,6 +99,7 @@ class Converter:
         flag = False
         itemNum = 0
         videoInfo['audioTracks'] = {}
+        videoInfo['subtitles'] = {}
         for item in data['streams']:
             if item['codec_type'] == 'video':
                 videoInfo['mapVideo'] = itemNum
@@ -129,6 +132,16 @@ class Converter:
 
                 if self.has_key(['tags', 'title'], item):
                     videoInfo['audioTracks'][itemNum]['language'] = item['tags']['title']
+
+            if item['codec_type'] == 'subtitle':
+                videoInfo['subtitles'][itemNum] = {}
+                videoInfo['subtitles'][itemNum]['mapSubtitle'] = itemNum
+                videoInfo['subtitles'][itemNum]['codecSubtitle'] = item['codec_name']
+                if self.has_key(['tags', 'language'], item):
+                    videoInfo['subtitles'][itemNum]['language'] = item['tags']['language']
+                if self.has_key(['tags', 'title'], item):
+                    videoInfo['subtitles'][itemNum]['language'] = item['tags']['title']
+
             itemNum += 1
 
         if not videoInfo['audioTracks']: # todo - doesn't need for mute video
@@ -181,6 +194,11 @@ class Converter:
             if not query:
                 continue
             queries.append(query)
+
+            query = self.prepare_query_get_subtitles(file, name)
+            if not query:
+                continue
+            queries.append(query)
         
         return queries
 
@@ -220,7 +238,7 @@ class Converter:
             codec = 'libx264'  # todo - maybe we can add other codecs
         else:
             codec = 'libx264'
-        query = query + ' -c:v ' + codec + ' -b:v ' + self.bitrateVideo + ' -pass 1 -an -f mp4 ' + self.outFolder + 'NULL' # NULL
+        query = query + ' -c:v ' + codec + ' -b:v ' + self.bitrateVideo + ' -pass 1 -an -f mp4 ' + self.outFolder + ' NULL' # NULL
 
         return query
 
@@ -267,10 +285,36 @@ class Converter:
 
         # todo - add good query
         # query = self.ffmpeg + ' -map 0:' + audio['map'] + ' -i ' + path + ' -vn -ar ' + audio['frequency'] + ' -c:a:' + audio['map'] + '  aac -b:a ' + audio['bitrate'] + ' -f aac ' + outName
-        query = self.ffmpeg + ' -i ' + path + ' -map 0:2 -c:a copy ' + outName
+        query = self.ffmpeg + ' -i ' + path + ' -map 0:2 -c:a copy ' + outName # todo - add map audio 
             
         return query
 
+    def prepare_query_get_subtitles(self, file, name) -> str:
+        query = ''
+
+        path = '"' + file['path'] + '"'
+        query = self.ffmpeg + ' -y -i ' + path
+
+        newName = name + '.srt'
+        outName = os.path.join(os.path.dirname(self.outFolder), os.path.basename(newName))
+
+        map = ''
+        for subtitleTrack in file['info']['subtitles'].values():
+            if 'language' not in subtitleTrack:
+                continue
+
+            language = subtitleTrack['language'].lower()
+            if language.find('eng') == -1: #todo add other languages
+                continue
+            mapSubtitle = subtitleTrack['mapSubtitle']
+            map = str(mapSubtitle)
+
+        if not map:
+            return ''
+
+        query = self.ffmpeg + ' -i ' + path + ' -map 0:' + map + ' -c:s:' + map + ' srt ' + outName
+            
+        return query
 # folder = 'D:\\cartoon\\gumball\\5season\\input\\'
 # outFolder = 'D:\\cartoon\\gumball\\5season\\output\\'
 Converter = Converter()
