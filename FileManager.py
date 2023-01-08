@@ -78,6 +78,8 @@ class FileManager():
 
             newName = re.sub(r'S(\d{1,2})E(\d+)', r'S\1E' + numberSerie, file)
             print('Renamed:', file, 'to', newName)
+            print(numberSerie)
+            print('------------------')
             if self.test == False:
                 shutil.move(file, newName)
 
@@ -137,9 +139,11 @@ class FileManager():
         name = name.replace(' ', '')
         name = name.replace('.', '')
 
-        newName = 'S0' + matches['season'] + 'E' + matches['serie'] + type + 'x1080x' + name + matches['end']
+        season = str(matches['season']).zfill(1)
+
+        newName = 'S0' + season + 'E' + matches['serie'] + type + 'x1080x' + name + matches['end']
         if matches[2] in self.names:
-            newName = 'S0' + matches['season'] + 'E' + matches['serie'] + type + 'x1080x' + name + matches['end']
+            newName = 'S0' + season + 'E' + matches['serie'] + type + 'x1080x' + name + matches['end']
         newFile = os.path.join(self.folder, newName)
         self.names.append(matches['serie'])
         print('Renamed:', file, 'to', newFile, end='\n\r \n\r')
