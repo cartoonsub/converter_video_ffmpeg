@@ -123,21 +123,29 @@ class FileManager():
 
     def Rename(self, file):
         matches = re.search(r'(?P<season>\d)[x-]+(?P<serie>\d+)[-\s]*TheAmazingWorldofGumball[+\s]*\[(?P<name>[\w.]+)\].+?(?P<end>\.\w+)$', file, re.IGNORECASE)
+        matches = re.search(r'S(?P<season>\d{1,2})E(?P<serie>\d{1,2})\s*(?P<name>[\w.\s]+).*?(?P<end>\.\w{3})$', file, re.IGNORECASE)
         if not matches:
             print('Not found:', file, end='\n\r \n\r')
             return
 
         type = 'DUB'
+        type = 'SUB'
         if matches['end'] == '.aac':
             type = 'ORIGINAL'
-        newName = 'S0' + matches['season'] + 'E' + matches['serie'] + type + 'x1080x' + matches['name'] + matches['end']
+
+        name = matches['name']
+        name = name.replace(' ', '')
+        name = name.replace('.', '')
+
+        newName = 'S0' + matches['season'] + 'E' + matches['serie'] + type + 'x1080x' + name + matches['end']
         if matches[2] in self.names:
-            newName = 'S0' + matches['season'] + 'E' + matches['serie'] + type + 'x1080x' + matches['name'] + matches['end']
+            newName = 'S0' + matches['season'] + 'E' + matches['serie'] + type + 'x1080x' + name + matches['end']
         newFile = os.path.join(self.folder, newName)
         self.names.append(matches['serie'])
         print('Renamed:', file, 'to', newFile, end='\n\r \n\r')
         if self.test == True:
             return
+
         shutil.move(file, newFile)
 
 
