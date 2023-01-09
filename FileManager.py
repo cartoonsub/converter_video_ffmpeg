@@ -125,7 +125,7 @@ class FileManager():
 
     def Rename(self, file):
         matches = re.search(r'(?P<season>\d)[x-]+(?P<serie>\d+)[-\s]*TheAmazingWorldofGumball[+\s]*\[(?P<name>[\w.]+)\].+?(?P<end>\.\w+)$', file, re.IGNORECASE)
-        matches = re.search(r'S(?P<season>\d{1,2})E(?P<serie>\d{1,2})\s*(?P<name>[\w.\s]+).*?(?P<end>\.\w{3})$', file, re.IGNORECASE)
+        matches = re.search(r'S(?P<season>\d{1,2})E(?P<serie>\d{1,2})\s*(?P<name>[\w.\s]+).*?(?P<end>\.\w{2,3})$', file, re.IGNORECASE)
         if not matches:
             print('Not found:', file, end='\n\r \n\r')
             return
@@ -142,7 +142,7 @@ class FileManager():
         if name.find('SUBx1080x') != -1:
             return
 
-        season = str(matches['season']).zfill(1)
+        season = str(int(matches['season'])).zfill(1)
 
         newName = 'S0' + season + 'E' + matches['serie'] + type + 'x1080x' + name + matches['end']
         if matches[2] in self.names:
