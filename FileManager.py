@@ -139,6 +139,9 @@ class FileManager():
         name = name.replace(' ', '')
         name = name.replace('.', '')
 
+        if name.find('SUBx1080x') != -1:
+            return
+
         season = str(matches['season']).zfill(1)
 
         newName = 'S0' + season + 'E' + matches['serie'] + type + 'x1080x' + name + matches['end']
