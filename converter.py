@@ -73,11 +73,12 @@ class Converter:
             print('Не найдены файлы для конвертации')
             return
 
-        queries = self.prepare_query(files)
-        if not queries:
+        self.prepare_queries(files)
+        if not self.queries:
             print('Не удалось создать запросы для ffmpeg')
             return
-        self.convert_video(queries)
+
+        self.convert_video()
 
     def prepare_video(self):
         videoFiles = {}
@@ -164,7 +165,7 @@ class Converter:
             return {}
         return videoInfo
 
-    def prepare_query(self, files) -> None:
+    def prepare_queries(self, files) -> None:
         mainFields = ['path', 'info']
         if not files:
             return
@@ -188,12 +189,12 @@ class Converter:
                 self.prepare_video_query(file, name, outName, startQuery)
 
             if self.skipAudio == False:
-                self.prepare_query_get_audio(file, name)
+                self.prepare_query_get_audio(file, name, outName, startQuery)
 
             if self.skipSubtitles == False:
-                self.prepare_query_get_subtitles(file, name)
+                pass
+                # self.prepare_query_get_subtitles(file, name)
 
-        pprint(self.queries)
 
     def prepareName(self, name):
         name = name.replace(' ', '')
@@ -247,7 +248,6 @@ class Converter:
             if language == lang:
                 break
 
-        sleep(100)
         return audio
 
 
@@ -269,27 +269,6 @@ class Converter:
             # todo - add good query
             # query = self.ffmpeg + ' -map 0:' + audio['map'] + ' -i ' + path + ' -vn -ar ' + audio['frequency'] + ' -c:a:' + audio['map'] + '  aac -b:a ' + audio['bitrate'] + ' -f aac ' + outName
             return query
-
-
-    def convert_video(self, queries):
-        for query in queries:
-            try:
-                print(query)
-                print('')
-                if self.convert == False:
-                    continue
-                os.system(query)
-            except:
-                print("Упс! Не удается конвертировать файл: " + query)
-
-
-    def has_key(self, keys, dict):
-        answer = False
-        if keys[0] in dict:
-            if not keys[1:]:
-                return True
-            answer = self.has_key(keys[1:], dict[keys[0]])
-        return answer
 
 
     def prepare_query_get_subtitles(self, file, name) -> str:
@@ -318,12 +297,30 @@ class Converter:
         query = self.ffmpeg + ' -i ' + path + ' -map 0:' + map + ' -c:s:' + map + ' srt ' + outName
             
         return query
-# folder = 'D:\\cartoon\\gumball\\5season\\input\\'
-# outFolder = 'D:\\cartoon\\gumball\\5season\\output\\'
-Converter = Converter()
+
+
+    def convert_video(self):
+        for query in self.queries:
+            try:
+                print(query, end='\r\n\r\n')
+                if self.convert == False:
+                    continue
+                os.system(query)
+                break
+            except:
+                print("Не удается конвертировать файл: " + query)
+
+    def has_key(self, keys, dict):
+        answer = False
+        if keys[0] in dict:
+            if not keys[1:]:
+                return True
+            answer = self.has_key(keys[1:], dict[keys[0]])
+        return answer
+
 
 if __name__ == '__main__':
-    pass
+    Converter = Converter()
 
 '''
         двухполосный видео в mp4 : убрал ( -vtag xvid ) - возможно не будет работать на тв 
