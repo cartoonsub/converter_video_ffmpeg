@@ -257,13 +257,14 @@ class Converter:
             audio = self.getAudio(file, 'eng')
             if audio:
                 name = outName + 'xENG.aac'
-                query = startQuery + ' -map 0:' + audio['map'] + ' -c:a copy ' + name
+                # query = startQuery + ' -map 0:' + audio['map'] + ' -c:a copy ' + name
+                query = startQuery + ' -map 0:' + audio['map'] + ' -b:a ' + audio['bitrate'] + ' ' + name
                 self.queries.append(query)
 
             audio = self.getAudio(file, 'rus')
             if audio:
                 name = outName + 'xRUS.aac'
-                query = startQuery + ' -map 0:' + audio['map'] + ' -c:a copy ' + name
+                query = startQuery + ' -map 0:' + audio['map'] + ' -b:a ' + audio['bitrate'] + ' ' + name
                 self.queries.append(query)
 
             # todo - add good query
@@ -306,7 +307,6 @@ class Converter:
                 if self.convert == False:
                     continue
                 os.system(query)
-                break
             except:
                 print("Не удается конвертировать файл: " + query)
 
