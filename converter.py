@@ -3,6 +3,7 @@ import re
 import sys
 import ffmpeg # https://github.com/kkroening/ffmpeg-python (pip install ffmpeg-python)
 from pprint import pprint
+from time import sleep
 
 class Converter:
     def __init__(self):
@@ -12,6 +13,8 @@ class Converter:
         self.bitrateVideo = '5000k'
         self.bitrateAudio = '192k'
         self.convert = False
+        self.skipVideo = False
+        self.queries = []
 
         arguments = self.getArgumetsList()
         if not arguments:
@@ -26,6 +29,9 @@ class Converter:
         if 'convert' in arguments:
             self.convert = bool(arguments['convert'])
         
+        if 'skip_video' in arguments:
+            self.skipVideo = bool(arguments['skip_video'])
+
         if not self.folder:
             exit('did not find folder')
         if not self.outFolder:
@@ -34,7 +40,7 @@ class Converter:
         self.run()
 
     def getArgumetsList(self):
-        commands = ['folder', 'out_folder', 'convert'] #сделать уникальным список todo
+        commands = ['folder', 'out_folder', 'convert', 'skip_video', 'skip_audio', 'skip_subtitles']
         arguments = {}
         args = sys.argv
         if not args:
@@ -59,7 +65,6 @@ class Converter:
             print('Не найдены файлы для конвертации')
             return
 
-        pprint(files)
         queries = self.prepare_query(files)
         if not queries:
             print('Не удалось создать запросы для ffmpeg')
@@ -145,10 +150,10 @@ class Converter:
             itemNum += 1
 
         if not videoInfo['audioTracks']: # todo - doesn't need for mute video
+            print('Не найдены аудиодорожки в ' + file)
             return {}
         if flag == False:
             return {}
-        
         return videoInfo
 
     def prepare_query(self, files) -> dict:
@@ -156,6 +161,7 @@ class Converter:
         mainFields = ['path', 'info']
         if not files:
             return {}
+        
         for file in files.values():
             flag = True
             for field in mainFields:
@@ -165,35 +171,16 @@ class Converter:
                 continue
 
             path = '"' + file['path'] + '"'
-            query = self.ffmpeg + ' -y -i ' + path
-
-            name, ext = os.path.splitext(path)
-            name = self.prepareName(name)
-            newName = name + '.mp4'
-            outName = os.path.join(os.path.dirname(self.outFolder), os.path.basename(newName))
+            startQuery = self.ffmpeg + ' -y -i ' + path
             
-            if self.has_key(['info', 'bitrateVideo'], file):
-                self.bitrateVideo = str(file['info']['bitrateVideo'])
+            name, ext = os.path.splitext(path)
+            name = self.prepareName(name)# todo - don't forget to change extens
+            outName = os.path.join(os.path.dirname(self.outFolder), os.path.basename(name))
 
-            audio = self.setAudio(file)
-            if not audio:
-                print('Не удалось получить аудио дорожку для ' + name)
-                continue
+            if self.skipVideo == False:
+                self.prepare_video_query(file, name, outName, startQuery)
 
-            query = self.setQueryPass1(file, query)
-            queries.append(query)
-
-            query = ''
-            query = self.ffmpeg + ' -y -i ' + path + ' -map 0:0'
-            query = query + ' -map 0:' + audio['map'] + ' -c:v:0 libx264 -b:v ' + self.bitrateVideo + ' -pass 2 -c:a:' + audio['map'] + ' aac -b:a ' + audio['bitrate'] + ' -movflags +faststart ' + outName
-            queries.append(query)
-            # ffmpeg -y -i "C:\\phytonProjects\\phytonEducation\\useful\\video\\su.s05e01e02.mkv" -c:v libx264 -b:v 5948k -pass 1 -an -f mp4  NULL
-            # ffmpeg -y -i "C:\\phytonProjects\\phytonEducation\\useful\\video\\su.s05e01e02.mkv" -map 0:0 -map 0:1 -c:v:0 libx264 -b:v 5948k -pass 2 -c:a:1 aac -b:a 192k -movflags +faststart output.mp4
-        
             query = self.prepare_query_get_audio(file, name)
-            if not query:
-                continue
-            queries.append(query)
 
             query = self.prepare_query_get_subtitles(file, name)
             if not query:
@@ -207,17 +194,42 @@ class Converter:
         name = name.replace('\"\'', '')
         return name
 
-    def setAudio(self, file) -> dict:
+    def prepare_video_query(self, file, name, outName, startQuery) -> str:
+        if self.has_key(['info', 'bitrateVideo'], file):
+            self.bitrateVideo = str(file['info']['bitrateVideo'])
+
+        queryPass = self.setQueryPass1(file, startQuery)
+        
+        audio = self.getAudio(file)
+        if not audio:
+            print('Не удалось получить аудио дорожку для ' + name)
+            return
+        
+        self.queries.append(queryPass)
+
+        outName = outName + '.mp4'
+        query = ''
+        query = startQuery + ' -map 0:0'
+        query = query + ' -map 0:' + audio['map'] + ' -c:v:0 libx264 -b:v ' + self.bitrateVideo + ' -pass 2 -c:a:' + audio['map'] + ' aac -b:a ' + audio['bitrate'] + ' -movflags +faststart ' + outName
+        self.queries.append(query)
+        # ffmpeg -y -i "C:\\phytonProjects\\phytonEducation\\useful\\video\\su.s05e01e02.mkv" -c:v libx264 -b:v 5948k -pass 1 -an -f mp4  NULL
+        # ffmpeg -y -i "C:\\phytonProjects\\phytonEducation\\useful\\video\\su.s05e01e02.mkv" -map 0:0 -map 0:1 -c:v:0 libx264 -b:v 5948k -pass 2 -c:a:1 aac -b:a 192k -movflags +faststart output.mp4
+
+
+    def setQueryPass1(self, startQuery) -> str:
+        # codec = file['info']['codecVideo']
+        # todo - maybe we can add other codecs
+        codec = 'libx264'
+        query = startQuery + ' -c:v ' + codec + ' -b:v ' + self.bitrateVideo + ' -pass 1 -an -f mp4 ' + self.outFolder + ' NULL' # NULL
+
+        return query
+
+    def getAudio(self, file, lang = 'rus') -> dict:
         audio = {}
         for audioTrack in file['info']['audioTracks'].values():
             language = ''
             if 'language' in audioTrack:
                 language = audioTrack['language']
-
-            # if language == 'eng':
-            #     continue
-            # if language == 'Original':
-            #     continue
 
             mapAudio = audioTrack['mapAudio']
             if 'bitrate' in audioTrack:
@@ -226,21 +238,32 @@ class Converter:
                 audio['bitrate'] = self.bitrateAudio
             audio['map'] = str(mapAudio)
 
-            if language == 'rus':
+            if language == lang:
                 break
-        
+
+        sleep(100)
         return audio
 
-    def setQueryPass1(self, file, query) -> str:
-        if file['info']['codecVideo']:
-            codec = file['info']['codecVideo']
-        if codec == 'h264':
-            codec = 'libx264'  # todo - maybe we can add other codecs
-        else:
-            codec = 'libx264'
-        query = query + ' -c:v ' + codec + ' -b:v ' + self.bitrateVideo + ' -pass 1 -an -f mp4 ' + self.outFolder + ' NULL' # NULL
 
-        return query
+    def prepare_query_get_audio(self, file, name, outName, startQuery) -> str:
+            query = ''
+
+            audio = self.getAudio(file, 'eng')
+            if audio:
+                name = outName + 'xENG.aac'
+                query = startQuery + ' -map 0:' + audio['map'] + ' -c:a copy ' + name
+                self.queries.append(query)
+
+            audio = self.getAudio(file, 'rus')
+            if audio:
+                name = outName + 'xRUS.aac'
+                query = startQuery + ' -map 0:' + audio['map'] + ' -c:a copy ' + name
+                self.queries.append(query)
+
+            # todo - add good query
+            # query = self.ffmpeg + ' -map 0:' + audio['map'] + ' -i ' + path + ' -vn -ar ' + audio['frequency'] + ' -c:a:' + audio['map'] + '  aac -b:a ' + audio['bitrate'] + ' -f aac ' + outName
+            return query
+
 
     def convert_video(self, queries):
         for query in queries:
@@ -261,33 +284,6 @@ class Converter:
             answer = self.has_key(keys[1:], dict[keys[0]])
         return answer
 
-    def prepare_query_get_audio(self, file, name) -> str:
-        query = ''
-
-        path = '"' + file['path'] + '"'
-        query = self.ffmpeg + ' -y -i ' + path
-
-        newName = name + '.aac'
-        outName = os.path.join(os.path.dirname(self.outFolder), os.path.basename(newName))
-
-        audio = {}
-        for audioTrack in file['info']['audioTracks'].values():
-            if 'language' in audioTrack:
-                continue
-
-            mapAudio = audioTrack['mapAudio']
-            if 'bitrate' in audioTrack:
-                audio['bitrate'] = str(audioTrack['bitrate'])
-            else:
-                audio['bitrate'] = self.bitrateAudio
-            audio['map'] = str(mapAudio)
-            # audio['frequency'] = audioTrack['frequency']
-
-        # todo - add good query
-        # query = self.ffmpeg + ' -map 0:' + audio['map'] + ' -i ' + path + ' -vn -ar ' + audio['frequency'] + ' -c:a:' + audio['map'] + '  aac -b:a ' + audio['bitrate'] + ' -f aac ' + outName
-        query = self.ffmpeg + ' -i ' + path + ' -map 0:2 -c:a copy ' + outName # todo - add map audio 
-            
-        return query
 
     def prepare_query_get_subtitles(self, file, name) -> str:
         query = ''
