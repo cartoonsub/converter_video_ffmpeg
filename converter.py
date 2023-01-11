@@ -310,6 +310,7 @@ class Converter:
             except:
                 print("Не удается конвертировать файл: " + query)
 
+
     def has_key(self, keys, dict):
         answer = False
         if keys[0] in dict:
