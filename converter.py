@@ -14,6 +14,8 @@ class Converter:
         self.bitrateAudio = '192k'
         self.convert = False
         self.skipVideo = False
+        self.skipAudio = False
+        self.skipSubtitles = False
         self.queries = []
 
         arguments = self.getArgumetsList()
@@ -31,6 +33,12 @@ class Converter:
         
         if 'skip_video' in arguments:
             self.skipVideo = bool(arguments['skip_video'])
+
+        if 'skip_audio' in arguments:
+            self.skipAudio = bool(arguments['skip_audio'])
+
+        if 'skip_subtitles' in arguments:
+            self.skipSubtitles = bool(arguments['skip_subtitles'])
 
         if not self.folder:
             exit('did not find folder')
@@ -156,11 +164,10 @@ class Converter:
             return {}
         return videoInfo
 
-    def prepare_query(self, files) -> dict:
-        queries = []
+    def prepare_query(self, files) -> None:
         mainFields = ['path', 'info']
         if not files:
-            return {}
+            return
         
         for file in files.values():
             flag = True
@@ -180,14 +187,13 @@ class Converter:
             if self.skipVideo == False:
                 self.prepare_video_query(file, name, outName, startQuery)
 
-            query = self.prepare_query_get_audio(file, name)
+            if self.skipAudio == False:
+                self.prepare_query_get_audio(file, name)
 
-            query = self.prepare_query_get_subtitles(file, name)
-            if not query:
-                continue
-            queries.append(query)
-        
-        return queries
+            if self.skipSubtitles == False:
+                self.prepare_query_get_subtitles(file, name)
+
+        pprint(self.queries)
 
     def prepareName(self, name):
         name = name.replace(' ', '')
@@ -198,7 +204,7 @@ class Converter:
         if self.has_key(['info', 'bitrateVideo'], file):
             self.bitrateVideo = str(file['info']['bitrateVideo'])
 
-        queryPass = self.setQueryPass1(file, startQuery)
+        queryPass = self.setQueryPass1(startQuery)
         
         audio = self.getAudio(file)
         if not audio:
@@ -275,6 +281,7 @@ class Converter:
                 os.system(query)
             except:
                 print("Упс! Не удается конвертировать файл: " + query)
+
 
     def has_key(self, keys, dict):
         answer = False
