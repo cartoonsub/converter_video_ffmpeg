@@ -258,13 +258,13 @@ class Converter:
             if audio:
                 name = outName + 'xENG.aac'
                 # query = startQuery + ' -map 0:' + audio['map'] + ' -c:a copy ' + name
-                query = startQuery + ' -map 0:' + audio['map'] + ' -b:a ' + audio['bitrate'] + ' ' + name
+                query = startQuery + ' -map 0:' + audio['map'] + ' -b:a ' + audio['bitrate'] + ' "' + name + '"'
                 self.queries.append(query)
 
             audio = self.getAudio(file, 'rus')
             if audio:
                 name = outName + 'xRUS.aac'
-                query = startQuery + ' -map 0:' + audio['map'] + ' -b:a ' + audio['bitrate'] + ' ' + name
+                query = startQuery + ' -map 0:' + audio['map'] + ' -b:a ' + audio['bitrate'] + ' "' + name + '"'
                 self.queries.append(query)
 
             # todo - add good query
