@@ -114,6 +114,7 @@ class Converter:
         itemNum = 0
         videoInfo['audioTracks'] = {}
         videoInfo['subtitles'] = {}
+
         for item in data['streams']:
             if item['codec_type'] == 'video':
                 videoInfo['mapVideo'] = itemNum
@@ -122,6 +123,9 @@ class Converter:
                 videoInfo['codecVideo'] = item['codec_name']
 
                 # todo - find other bitrate options 
+                if 'bit_rate' in item:
+                    videoInfo['bitrateVideo'] = item['bit_rate']
+
                 if self.has_key(['tags', 'BPS-eng'], item):
                     videoInfo['bitrateVideo'] = item['tags']['BPS-eng']
                 flag = True
@@ -231,9 +235,8 @@ class Converter:
 
         return query
 
-    def getAudio(self, file, lang = {'rus', 'Дубляж'}) -> dict:
+    def getAudio(self, file, lang = {'rus', 'Дубляж', 'und'}) -> dict:
         audio = {}
-        print(file['info']['audioTracks'])
         for audioTrack in file['info']['audioTracks'].values():
             language = ''
             if 'language' in audioTrack:
@@ -256,6 +259,17 @@ class Converter:
             audio['map'] = str(mapAudio)
             break
 
+        #todo delete it and replace with audio with no language
+        if not audio:
+            for audioTrack in file['info']['audioTracks'].values():
+
+                mapAudio = audioTrack['mapAudio']
+                if 'bitrate' in audioTrack:
+                    audio['bitrate'] = str(audioTrack['bitrate'])
+                else:
+                    audio['bitrate'] = self.bitrateAudio
+                audio['map'] = str(mapAudio)
+                break
         return audio
 
 
