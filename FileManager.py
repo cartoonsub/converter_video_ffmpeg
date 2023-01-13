@@ -8,12 +8,12 @@ from pprint import pprint
 
 class FileManager():
     def __init__(self):
-         self.names = []
-         self.folder = ''
-         self.dest = ''
-         self.url = ''
-         self.test = False
-         self.setArguments()
+        self.names = []
+        self.folder = ''
+        self.dest = ''
+        self.url = ''
+        self.test = False
+        self.setArguments()
 
     # todo пересмотреть создание переменных из списка ?
     def setArguments(self):
@@ -57,6 +57,7 @@ class FileManager():
 
 
     def renameFilesBySeries(self):
+        print('renameFilesBySeries')
         if not self.folder:
             return
         
@@ -79,8 +80,8 @@ class FileManager():
             newName = re.sub(r'S(\d{1,2})E(\d+)', r'S\1E' + numberSerie, file)
             print('Renamed:', file, 'to', newName)
             print(numberSerie)
-            print('------------------')
-            if self.test == False:
+            if self.test == True:
+                print('------------------')
                 shutil.move(file, newName)
 
 
@@ -119,6 +120,7 @@ class FileManager():
         return filesList
 
     def RenameFiles(self):
+        print('RenameFiles')
         files = self.getFiles(self.folder)
         for file in files:
             self.Rename(file)
@@ -155,8 +157,5 @@ class FileManager():
 
         shutil.move(file, newFile)
 
-
 if __name__ == '__main__':
-    # folder = r'D:\cartoon\gumball\3season'
-    # dest = r'D:\cartoon\gumball\3season'
     Fm = FileManager()

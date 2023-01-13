@@ -227,7 +227,7 @@ class Converter:
         # codec = file['info']['codecVideo']
         # todo - maybe we can add other codecs
         codec = 'libx264'
-        query = startQuery + ' -c:v ' + codec + ' -b:v ' + self.bitrateVideo + ' -pass 1 -an -f mp4 ' + self.outFolder + ' NULL' # NULL
+        query = startQuery + ' -c:v ' + codec + ' -b:v ' + self.bitrateVideo + ' -pass 1 -an -f mp4 NULL' # NULL
 
         return query
 
