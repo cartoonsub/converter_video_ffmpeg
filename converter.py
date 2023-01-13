@@ -211,7 +211,7 @@ class Converter:
         if not audio:
             print('Не удалось получить аудио дорожку для ' + name)
             return
-        
+
         self.queries.append(queryPass)
 
         outName = outName + '.mp4'
@@ -231,12 +231,22 @@ class Converter:
 
         return query
 
-    def getAudio(self, file, lang = 'rus') -> dict:
+    def getAudio(self, file, lang = {'rus', 'Дубляж'}) -> dict:
         audio = {}
+        print(file['info']['audioTracks'])
         for audioTrack in file['info']['audioTracks'].values():
             language = ''
             if 'language' in audioTrack:
                 language = audioTrack['language']
+
+            suitable = False
+            for langType in lang:
+                if language == langType:
+                    suitable = True
+                    break
+
+            if suitable == False:
+                continue
 
             mapAudio = audioTrack['mapAudio']
             if 'bitrate' in audioTrack:
@@ -244,9 +254,7 @@ class Converter:
             else:
                 audio['bitrate'] = self.bitrateAudio
             audio['map'] = str(mapAudio)
-
-            if language == lang:
-                break
+            break
 
         return audio
 
@@ -254,14 +262,14 @@ class Converter:
     def prepare_query_get_audio(self, file, name, outName, startQuery) -> str:
             query = ''
 
-            audio = self.getAudio(file, 'eng')
+            audio = self.getAudio(file, {'eng'})
             if audio:
                 name = outName + 'xENG.aac'
                 # query = startQuery + ' -map 0:' + audio['map'] + ' -c:a copy ' + name
                 query = startQuery + ' -map 0:' + audio['map'] + ' -b:a ' + audio['bitrate'] + ' ' + name
                 self.queries.append(query)
 
-            audio = self.getAudio(file, 'rus')
+            audio = self.getAudio(file)
             if audio:
                 name = outName + 'xRUS.aac'
                 query = startQuery + ' -map 0:' + audio['map'] + ' -b:a ' + audio['bitrate'] + ' ' + name
